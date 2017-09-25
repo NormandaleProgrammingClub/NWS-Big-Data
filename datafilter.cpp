@@ -11,6 +11,7 @@
 int main()
 {
 	string file;
+	vector <vector <string>> line;
 	char delimiter;
 	int columns = 0;
 	
@@ -21,17 +22,16 @@ int main()
 	cin >> delimiter;
 	cout << "Please input the columns, with no spaces, that you would like:" << endl;
 	cin >> columns;
-	//cout << file << " " << delimiter << " " << columns << endl;
+	cout << file << " " << delimiter << " " << columns << endl;
 	
 	
-	fstream data;
-	
-	data.open(file,in);
-	
-	
-	
-	
-	
-	
+	fstream data(file);
+	if (!data) cerr << "Can't open input file!" << endl;
+
+	while (getline(data,line))
+
+
+
+
 	return 0;
 }
