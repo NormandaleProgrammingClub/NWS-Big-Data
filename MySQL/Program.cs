@@ -14,7 +14,7 @@ namespace MySQL
 
         static void Main(string[] args)
         {
-            myConnectionString = "server=192.168.10.198;uid=NCCCPC;pwd=NCCCPCPassword2017;database=CPC;";
+            myConnectionString = "server=70.99.105.198;uid=NCCCPC;pwd=NCCCPCPassword2017;";
 
             try
             {
@@ -28,7 +28,7 @@ namespace MySQL
 
             try
             {
-                string query = "SELECT col0,col1 FROM Table";
+                string query = "SELECT col0,col1 FROM CPC.Table";
                 MySqlCommand cmd = new MySqlCommand(query, conn);
                 MySqlDataReader reader = cmd.ExecuteReader();
 
@@ -44,6 +44,7 @@ namespace MySQL
                 Console.WriteLine(ex.Message);
             }
 
+            Console.ReadLine();
         }
     }
 }
