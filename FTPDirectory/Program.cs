@@ -13,7 +13,7 @@ namespace FTPDirectory
         static void Main(string[] args)
         {
             // Get the object used to communicate with the server.  
-            FtpWebRequest request = (FtpWebRequest)WebRequest.Create("ftp://ftp.ncdc.noaa.gov/pub/data/noaa/");
+            FtpWebRequest request = (FtpWebRequest)WebRequest.Create("ftp://ftp.ncdc.noaa.gov/pub/data/noaa/2017/");
             request.Method = WebRequestMethods.Ftp.ListDirectoryDetails;
 
             // This example assumes the FTP site uses anonymous logon.  
@@ -23,7 +23,13 @@ namespace FTPDirectory
 
             Stream responseStream = response.GetResponseStream();
             StreamReader reader = new StreamReader(responseStream);
-            Console.WriteLine(reader.ReadToEnd());
+            //Console.WriteLine(reader.ReadToEnd());
+
+            while (reader.Peek() >= 0)
+            {
+                String line = reader.ReadLine().Substring(55, 20);
+                Console.WriteLine(line);
+            }
 
             Console.WriteLine("Directory List Complete, status {0}", response.StatusDescription);
 
