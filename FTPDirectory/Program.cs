@@ -50,14 +50,16 @@ namespace FTPDirectory
                 String File = line.Substring(55, 20);
                 String USAF = File.Substring(0, 6);
                 String WBAN = File.Substring(7, 5);
+                int american = 0;
+
+                String buffer = "";
+                buffer += File + ", USAF: " + USAF + ", WBAN: " + WBAN  + System.Environment.NewLine; // xxxxxx-xxxxx-2017.gz, USAF: xxxxxx, WBAN: xxxxx
 
                 // Search Stations DB for matching WBAN_ID, see if that record is the state we want
-                int exists = 0;
                 try
                 {
-                    //Console.WriteLine("    Searching DB...");
-                    //string query = "SELECT STATE_PROVINCE FROM CPC.WBAN WHERE WBAN_ID=\"" + line + "\" LIMIT 1";
-                    //string query = "SELECT STATE_PROVINCE FROM CPC.WBAN WHERE WBAN_ID=\"" + line + "\"";
+                    buffer += "    USAF_DB:" + System.Environment.NewLine;
+                    
                     string query = "";
                     string USAF2 = USAF;
                     string WBAN2 = WBAN;
@@ -65,50 +67,51 @@ namespace FTPDirectory
                     if (USAF == "999999")
                     {
                         // Query is to use WBAN ID
-                        query = "SELECT CTRY,ST FROM CPC.USAF WHERE WBAN_ID=\"" + WBAN + "\"";
+                        query = "SELECT * FROM CPC.USAF WHERE WBAN_ID=\"" + WBAN + "\"";
                         USAF2 = "      ";
                     }
                     else
                     {
                         // Query is to use USAF ID
-                        query = "SELECT CTRY,ST FROM CPC.USAF WHERE USAF_ID=\"" + USAF + "\"";
+                        query = "SELECT * FROM CPC.USAF WHERE USAF_ID=\"" + USAF + "\"";
                         if(WBAN == "99999") WBAN2 = "     ";
                     }
 
                     MySqlCommand cmd = new MySqlCommand(query, conn);
                     MySqlDataReader SQLreader = cmd.ExecuteReader();
+
+                    int dbid = SQLreader.GetOrdinal("dbid");
+                    int usaf_id = SQLreader.GetOrdinal("USAF_ID");
+                    int wban_id = SQLreader.GetOrdinal("WBAN_ID");
+                    int station_name = SQLreader.GetOrdinal("STATION_NAME");
+                    int ctry = SQLreader.GetOrdinal("CTRY");
+                    int st = SQLreader.GetOrdinal("ST");
+                    int lat = SQLreader.GetOrdinal("LAT");
+                    int lon = SQLreader.GetOrdinal("LON");
+                    int icao_call = SQLreader.GetOrdinal("ICAO_CALL");
                     
                     while(SQLreader.Read())
                     {
-                        /*
-                        if (SQLreader.GetString(0).Trim() == "US")
-                        {
-                            Console.Write("*");
-                            if (SQLreader.GetString(1) == "FL") Console.Write("*");
-                            Console.Write(" ");
-                        }
-
-                        // USAF: 000000 | WBAN: 00000 | Country: US / United States | State: MN
-                        Console.Write("USAF: " + USAF + " | WBAN: " + WBAN);
-                        Console.Write(" | Country: " + SQLreader.GetString(0).Trim() + " / " + CountryCode(SQLreader.GetString(0)));
-                        Console.WriteLine(" | State: " + SQLreader.GetString(1));
-                        
-                        writer.WriteLine("USAF: " + USAF2 + " | WBAN: " + WBAN2 + " | Country: " + SQLreader.GetString(0).Trim() + " / " + CountryCode(SQLreader.GetString(0)) + " | State: " + SQLreader.GetString(1));
-                        */
-
                         // SQLreader.GetString(SQLreader.GetOrdinal("dbid")); // Get by column name
                         
-                        if (SQLreader.GetString(0).Trim() == "US")
+                        if (SQLreader.GetString(SQLreader.GetOrdinal("CTRY")).Trim() == "US")
                         {
-                            Console.WriteLine("USAF: " + USAF2 + " | WBAN: " + WBAN2 + " | State: " + SQLreader.GetString(1));
-                            writer.WriteLine("USAF: " + USAF2 + " | WBAN: " + WBAN2 + " | State: " + SQLreader.GetString(1) + " | Src: " + File);
+                            american = 1;
+
+                            buffer += "        ";
+                            buffer += SQLreader.GetString(dbid) + " | "; // dbid
+                            buffer += SQLreader.GetString(usaf_id) + " | "; // USAF_ID
+                            buffer += SQLreader.GetString(wban_id) + " | "; // WBAN_ID
+                            buffer += SQLreader.GetString(station_name) + " | "; // STATION_NAME
+                            buffer += SQLreader.GetString(ctry).Trim() + " | "; // CTRY
+                            buffer += SQLreader.GetString(st) + " | "; // ST
+                            buffer += SQLreader.GetString(lat) + ", " + SQLreader.GetString(lon) + " | "; // Location
+                            buffer += SQLreader.GetString(icao_call) + System.Environment.NewLine; // ICAO_CALL
                         }
 
                     }
 
                     SQLreader.Close();
-                    //Console.WriteLine();
-                    //Console.WriteLine("    Data pulled");
                 }
                 catch (MySqlException ex)
                 {
@@ -116,8 +119,59 @@ namespace FTPDirectory
                     Console.WriteLine(ex.Message);
                 }
 
-                if(exists==1) Console.ReadLine();
-                //Console.WriteLine();
+                // Search Stations DB for matching WBAN_ID, see if that record is the state we want
+                try
+                {
+                    buffer += "    WBAN_DB:\n";
+
+                    string query = "SELECT * FROM CPC.WBAN WHERE WBAN_ID=\"" + WBAN + "\"";
+
+                    MySqlCommand cmd = new MySqlCommand(query, conn);
+                    MySqlDataReader SQLreader = cmd.ExecuteReader();
+
+                    int dbid = SQLreader.GetOrdinal("dbid");
+                    int wban_id = SQLreader.GetOrdinal("WBAN_ID");
+                    int station_name = SQLreader.GetOrdinal("STATION_NAME");
+                    int country = SQLreader.GetOrdinal("COUNTRY");
+                    int state = SQLreader.GetOrdinal("STATE_PROVINCE");
+                    int location = SQLreader.GetOrdinal("LOCATION");
+                    int call_sign = SQLreader.GetOrdinal("CALL_SIGN");
+
+                    while (SQLreader.Read())
+                    {
+                        // SQLreader.GetString(SQLreader.GetOrdinal("dbid")); // Get by column name
+
+                        //if (SQLreader.GetString(SQLreader.GetOrdinal("COUNTRY")).Trim() == "US")
+                        //{
+                        //    american = 1;
+
+                            buffer += "        ";
+                            buffer += SQLreader.GetString(dbid) + " | "; // dbid
+                            buffer += SQLreader.GetString(wban_id) + " | "; // WBAN_ID
+                            buffer += SQLreader.GetString(station_name) + " | "; // STATION_NAME
+                            buffer += SQLreader.GetString(country).Trim() + " | "; // CTRY
+                            buffer += SQLreader.GetString(state) + " | "; // ST
+                            buffer += SQLreader.GetString(location) + " | "; // Location
+                            buffer += SQLreader.GetString(call_sign) + System.Environment.NewLine; // ICAO_CALL
+                        //}
+
+                    }
+
+                    SQLreader.Close();
+                }
+                catch (MySqlException ex)
+                {
+                    Console.WriteLine("    Error pulling data:");
+                    Console.WriteLine(ex.Message);
+                }
+
+                buffer += System.Environment.NewLine;
+
+                if (american == 1)
+                {
+                    Console.Write(buffer);
+                    writer.Write(buffer);
+                }
             }
 
             Console.WriteLine("Directory List Complete, status {0}", response.StatusDescription);
