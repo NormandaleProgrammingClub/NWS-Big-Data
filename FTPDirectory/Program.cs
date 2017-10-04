@@ -41,6 +41,8 @@ namespace FTPDirectory
             Stream responseStream = response.GetResponseStream();
             StreamReader reader = new StreamReader(responseStream);
             //Console.WriteLine(reader.ReadToEnd());
+            
+            StreamWriter writer = new StreamWriter(@"C:\Users\aksoa\Desktop\stations.txt");
 
             while (reader.Peek() >= 0)
             {
@@ -48,7 +50,6 @@ namespace FTPDirectory
                 String File = line.Substring(55, 20);
                 String USAF = File.Substring(0, 6);
                 String WBAN = File.Substring(7, 5);
-                //Console.WriteLine(line);
 
                 // Search Stations DB for matching WBAN_ID, see if that record is the state we want
                 int exists = 0;
@@ -57,18 +58,29 @@ namespace FTPDirectory
                     //Console.WriteLine("    Searching DB...");
                     //string query = "SELECT STATE_PROVINCE FROM CPC.WBAN WHERE WBAN_ID=\"" + line + "\" LIMIT 1";
                     //string query = "SELECT STATE_PROVINCE FROM CPC.WBAN WHERE WBAN_ID=\"" + line + "\"";
-                    string query = "SELECT CTRY,ST FROM CPC.USAF WHERE USAF_ID=\"" + USAF + "\"";
+                    string query = "";
+                    string USAF2 = USAF;
+                    string WBAN2 = WBAN;
+
+                    if (USAF == "999999")
+                    {
+                        // Query is to use WBAN ID
+                        query = "SELECT CTRY,ST FROM CPC.USAF WHERE WBAN_ID=\"" + WBAN + "\"";
+                        USAF2 = "      ";
+                    }
+                    else
+                    {
+                        // Query is to use USAF ID
+                        query = "SELECT CTRY,ST FROM CPC.USAF WHERE USAF_ID=\"" + USAF + "\"";
+                        if(WBAN == "99999") WBAN2 = "     ";
+                    }
+
                     MySqlCommand cmd = new MySqlCommand(query, conn);
                     MySqlDataReader SQLreader = cmd.ExecuteReader();
-
+                    
                     while(SQLreader.Read())
                     {
-                        //string someStringFromColumnZero = SQLreader.GetString(0);
-                        //string someStringFromColumnOne = SQLreader.GetString(1);
-
-                        //Console.WriteLine("    State for WBAN_ID " + WBAN + ":");
-                        //Console.WriteLine("        " + someStringFromColumnZero);
-
+                        /*
                         if (SQLreader.GetString(0).Trim() == "US")
                         {
                             Console.Write("*");
@@ -76,9 +88,22 @@ namespace FTPDirectory
                             Console.Write(" ");
                         }
 
+                        // USAF: 000000 | WBAN: 00000 | Country: US / United States | State: MN
                         Console.Write("USAF: " + USAF + " | WBAN: " + WBAN);
                         Console.Write(" | Country: " + SQLreader.GetString(0).Trim() + " / " + CountryCode(SQLreader.GetString(0)));
                         Console.WriteLine(" | State: " + SQLreader.GetString(1));
+                        
+                        writer.WriteLine("USAF: " + USAF2 + " | WBAN: " + WBAN2 + " | Country: " + SQLreader.GetString(0).Trim() + " / " + CountryCode(SQLreader.GetString(0)) + " | State: " + SQLreader.GetString(1));
+                        */
+
+                        // SQLreader.GetString(SQLreader.GetOrdinal("dbid")); // Get by column name
+                        
+                        if (SQLreader.GetString(0).Trim() == "US")
+                        {
+                            Console.WriteLine("USAF: " + USAF2 + " | WBAN: " + WBAN2 + " | State: " + SQLreader.GetString(1));
+                            writer.WriteLine("USAF: " + USAF2 + " | WBAN: " + WBAN2 + " | State: " + SQLreader.GetString(1) + " | Src: " + File);
+                        }
+
                     }
 
                     SQLreader.Close();
@@ -99,6 +124,7 @@ namespace FTPDirectory
 
             Console.ReadLine();
 
+            writer.Close();
             reader.Close();
             response.Close();
         }
