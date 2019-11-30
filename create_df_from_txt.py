@@ -1,3 +1,5 @@
+# creates a dataframe object with weather data and saves it as pkl file
+
 import pandas
 
 buoy_txt_file = open('2005/41008h2005.txt', 'r')
@@ -21,7 +23,6 @@ for line in buoy_data_lines:
 			num = ''
 
 	buoy_data.append(line_nums)
-
 
 col_labels = ['YYYY', 'MM', 'DD', 'hh', 'mm', 'WD', 'WSPD', 'GST', 'WVHT', 'DPD', 'APD',  'MWD',  'BAR', 'ATMP', 'WTMP', 'DEWP', 'VIS', 'TIDE']
 df = pandas.DataFrame(buoy_data, columns=col_labels)
