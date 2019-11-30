@@ -1,4 +1,4 @@
-import pygame, math
+import pygame, math, pandas
 from pygame import gfxdraw
 pygame.init()
 
@@ -71,7 +71,7 @@ def draw_compass():
 		else:
 			pygame.draw.line(screen, (255, 255, 255), (inner_x, inner_y), (outer_x, outer_y), int(screen_w / 400)) # default width = 1 pixels
 
-def draw_windspeed(wind_speed, unit):
+def draw_speed(wind_speed, unit):
 	global unit_text_rect
 
 	if unit == 'kmph':
@@ -127,7 +127,10 @@ for i in range(5):
 	pygame.draw.circle(size_slider_surf, (127, 127, 0), (x, y), 5)
 
 window_resize(screen_w)
-d = 0
+# opens pkl file as dataframe
+buoy_df = pandas.read_pickle('41008h_2005.pkl')
+wind_dir = buoy_df.at[0, 'WD']
+wind_speed = buoy_df.at[0, 'WSPD']
 
 while True:
 	for event in pygame.event.get():
@@ -157,14 +160,12 @@ while True:
 					unit = 'mph'
 
 	mouse_x, mouse_y = pygame.mouse.get_pos()
-	d += 0.125 * clock.tick()
 
 	screen.fill((0, 0, 0))
-
 	screen.blit(size_slider_surf, (0, 0))
 	pygame.draw.circle(screen, (0, 0, 127), (20 + screen_size_slider * 30, 20), 5)
 	draw_compass()
-	draw_windspeed(50, unit)
-	draw_arrow(d)
+	draw_speed(wind_speed, unit)
+	draw_arrow(wind_dir)
 
-	pygame.display.update()
+	pygame.display.flip()
